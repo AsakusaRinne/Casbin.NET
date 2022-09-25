@@ -21,7 +21,7 @@ public class GFunctionCachePool : IGFunctionCachePool
             return cache;
         }
 
-        cache = new GFunctionCache();
+        cache = new GFunctionCache(new GFunctionCacheOptions());
         _cachePool[roleType] = cache;
         return cache;
     }

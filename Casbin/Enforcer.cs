@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using System;
 using Casbin.Adapter.File;
 using Casbin.Caching;
 using Casbin.Effect;
@@ -199,6 +200,41 @@ namespace Casbin
             Parallel.For(0, valuesCount, new ParallelOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism },
                 index => { results[index] = Enforce(context, requestValues[index]); });
             return results;
+        }
+
+        public bool EnforceWithoutWriteCache<TRequest>(EnforceContext context, TRequest requestValues) where TRequest : IRequestValues
+        {
+            if (context.HandleOptionAndCached)
+            {
+                return InternalEnforce(in context, in requestValues);
+            }
+
+            if (Enabled is false)
+            {
+                return true;
+            }
+
+            if (EnabledCache)
+            {
+                if (EnforceCache.TryGetResult(requestValues, out bool cachedResult))
+                {
+#if !NET452
+                    this.LogEnforceCachedResult(requestValues, cachedResult);
+#endif
+                    return cachedResult;
+                }
+            }
+
+            bool result = InternalEnforce(in context, in requestValues);
+
+            if (EnabledCache)
+            {
+                EnforceCache.TrySetResult(requestValues, result);
+            }
+#if !NET452
+            this.LogEnforceResult(context, requestValues, result);
+#endif
+            return result;
         }
 
 #if !NET452

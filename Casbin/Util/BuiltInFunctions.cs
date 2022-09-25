@@ -320,7 +320,7 @@ namespace Casbin.Util
                 }
 
                 result = roleManager.HasLink(name1, name2, domain);
-                cache.Set(name1, name2, result, domain);
+                cache.TrySet(name1, name2, result, domain);
                 return result;
             }
             return (GFunction) GFunction;
